@@ -1,0 +1,59 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+%matplotlib notebook
+
+df1 = pd.read_csv('./data/C2A2_data/BinnedCsvs_d400/ed157460d30113a689e487b88dcbef1f5d64cbd8bb7825f5f485013d.csv')
+df1.head()
+df1['Date']=pd.to_datetime(df1['Date'])
+df1['Data_Value']=df1['Data_Value']*0.1
+df1['Year']=df1['Date'].dt.year
+df1['Month_Day'] = df1['Date'].dt.strftime('%m-%d')
+#df1.drop(['Month'],axis=1,inplace=True)
+df1=df1[df1['Month_Day']!='02-29']
+a=df1['Element']
+b=df1['Data_Value']
+maxi=[]
+mini=[]
+a=list(a)
+b=list(b)
+
+for i in range (0,len(a)):
+    if a[i]=='TMAX':
+        maxi.append(b[i])
+    else:
+        mini.append(b[i])
+plt.plot(maxi)
+plt.plot(mini)
+max_temp=df1[(df1.Year>=2005) & (df1.Year<=2014)&(df1['Element']=='TMAX')].groupby(['Month_Day'])['Data_Value'].max()
+min_temp=df1[(df1.Year>=2005) & (df1.Year<=2014) & (df1['Element']=='TMIN')].groupby(['Month_Day'])['Data_Value'].min()
+df1['Day'] = df1['Date'].dt.strftime('%d')
+date_index = np.arange('2015-01-01','2016-01-01', dtype='datetime64[D]')
+
+plt.plot(date_index,max_temp,color='lightcoral',linewidth=1)
+plt.plot(date_index,min_temp,color='skyblue',linewidth=1)
+plt.gca().fill_between(date_index,max_temp,min_temp,facecolor='pink')
+df1 = df1.merge(max_temp.reset_index(drop=False).rename(columns={'Data_Value':'Max_temp'}), on='Month_Day', how='left')
+df1 = df1.merge(min_temp.reset_index(drop=False).rename(columns={'Data_Value':'Min_temp'}), on='Month_Day', how='left')
+r_high = df1[(df1.Year==2015)&(df1.Data_Value > df1.Max_temp)]
+r_low = df1[(df1.Year==2015)&(df1.Data_Value < df1.Min_temp)]
+print(r_high)
+print(r_low)plt.xlabel('Date', fontsize=10)
+plt.ylabel('° Celsius', fontsize=10)
+plt.title('Temperature in Ann Arbour, Michigan (2005-2015)', fontsize=10)
+
+plt.legend(['Record high (2005-2014)','Record low (2005-2014)','Shaded area','Record breaking high in 2015','Record breaking low in 2015'],loc=0,frameon=False)
+from matplotlib.dates import MonthLocator, DateFormatter
+ax.xaxis.set_major_locator(MonthLocator())
+ax.xaxis.set_minor_locator(MonthLocator(bymonthday=15))
+
+
+from matplotlib.ticker import NullFormatter
+ax.xaxis.set_major_formatter(NullFormatter())
+ax.xaxis.set_minor_formatter(DateFormatter('%b'))
+
+for tick in ax.xaxis.get_minor_ticks():
+    tick.tick1line.set_markersize(0) 
+    tick.label1.set_horizontalalignment('center')
+
+
